@@ -1,145 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cymor Love Hub.</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cymor Love Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Montserrat', sans-serif; background: #1a0606; color: white; overflow: hidden; }
 
-<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+        .heart { position: fixed; bottom: -10px; font-size: 20px; animation: floatUp 6s linear infinite; color: #ff4d6d; pointer-events: none; }
+        @keyframes floatUp { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(-110vh) scale(1.5); } }
 
-<style>
-*{margin:0;padding:0;box-sizing:border-box;}
-body{
-    font-family:'Montserrat',sans-serif;
-    background:#1a0606;
-    color:white;
-    overflow:hidden;
-}
+        .hero { height: 100vh; display: flex; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px; }
+        .hero h1 { font-family: 'Great Vibes', cursive; font-size: 3rem; color: #ff4d6d; }
+        .card { margin-top: 20px; background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; }
+        input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
+        button { padding: 12px; border: none; border-radius: 25px; background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; cursor: pointer; }
 
-/* HEARTS */
-.heart{
-    position:fixed;
-    bottom:-10px;
-    font-size:20px;
-    animation: floatUp 6s linear infinite;
-    color:#ff4d6d;
-}
-@keyframes floatUp{
-    0%{transform:translateY(0) scale(1);}
-    100%{transform:translateY(-110vh) scale(1.5);}
-}
+        .letterPage { display: none; height: 100vh; justify-content: center; align-items: center; }
+        .letter { background: white; color: #333; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; background-size: cover; background-position: center; z-index: 5; }
+        .letter h1 { font-family: 'Great Vibes', cursive; color: #b30000; }
 
-/* HERO */
-.hero{
-    height:100vh;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    text-align:center;
-    padding:20px;
-}
+        .confetti { position: fixed; width: 10px; height: 10px; background: red; top: -10px; animation: fall 3s linear forwards; pointer-events: none; }
+        @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
 
-.hero h1{
-    font-family:'Great Vibes',cursive;
-    font-size:3rem;
-    color:#ff4d6d;
-}
-
-.card{
-    margin-top:20px;
-    background:rgba(255,255,255,0.05);
-    padding:25px;
-    border-radius:15px;
-    width:90%;
-    max-width:500px;
-}
-
-input,select{
-    width:100%;
-    padding:12px;
-    margin:10px 0;
-    border-radius:8px;
-    border:none;
-}
-
-button{
-    padding:12px;
-    border:none;
-    border-radius:25px;
-    background:linear-gradient(45deg,#ff416c,#ff4b2b);
-    color:white;
-    cursor:pointer;
-}
-
-/* LETTER */
-.letterPage{
-    display:none;
-    height:100vh;
-    justify-content:center;
-    align-items:center;
-}
-
-.letter{
-    background:white;
-    color:#333;
-    padding:30px;
-    border-radius:10px;
-    max-width:600px;
-    width:90%;
-    background-size:cover;
-    background-position:center;
-}
-
-.letter h1{
-    font-family:'Great Vibes',cursive;
-    color:#b30000;
-}
-
-/* CONFETTI */
-.confetti{
-    position:fixed;
-    width:10px;
-    height:10px;
-    background:red;
-    top:-10px;
-    animation:fall 3s linear forwards;
-}
-@keyframes fall{
-    to{transform:translateY(100vh) rotate(360deg);}
-}
-
-/* FOOTER */
-.footer{
-    position:fixed;
-    bottom:10px;
-    width:100%;
-    text-align:center;
-    font-size:0.8rem;
-    color:#ffafbd;
-}
-.footer a{
-    color:white;
-    text-decoration:none;
-    font-weight:bold;
-}
-</style>
+        .footer { position: fixed; bottom: 10px; width: 100%; text-align: center; font-size: 0.8rem; color: #ffafbd; z-index: 10; }
+        .footer a { color: white; text-decoration: none; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
-<!-- FIXED MUSIC -->
-<audio id="music" loop autoplay muted>
-<source src="https://cdn.pixabay.com/download/audio/2022/11/03/audio_6f9b3c4f0d.mp3?filename=romantic-love-ambient-124008.mp3">
+<audio id="music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/11/03/audio_6f9b3c4f0d.mp3?filename=romantic-love-ambient-124008.mp3" type="audio/mpeg">
 </audio>
 
 <div class="hero" id="home">
-    <h1>Cymor Love Hub. 💌</h1>
-
+    <h1>Cymor Love Hub💌</h1>
     <div class="card">
         <input id="sender" placeholder="Your Name">
         <input id="recipient" placeholder="Partner's Name">
-
         <select id="purpose">
             <option value="date">Date</option>
             <option value="apology">Apology</option>
@@ -147,11 +47,8 @@ button{
             <option value="birthday">Birthday</option>
             <option value="missyou">Miss You</option>
         </select>
-
         <input type="file" id="imageUpload">
-
         <button onclick="generateLink()">Create Link ❤️</button>
-
         <input id="linkField" style="margin-top:10px;display:none;">
         <button onclick="copyLink()">Copy Link</button>
     </div>
@@ -160,7 +57,7 @@ button{
 <div class="letterPage" id="letterPage">
     <div class="letter" id="letter">
         <h1 id="title"></h1>
-        <p id="body"></p>
+        <p id="body" style="white-space: pre-wrap;"></p>
         <div style="text-align:center;margin-top:20px;">
             <button onclick="yes()">Yes ❤️</button>
             <button id="noBtn" onmouseover="moveNo()">No 😅</button>
@@ -168,123 +65,99 @@ button{
     </div>
 </div>
 
-<!-- FOOTER -->
-<div class="footer">
+<div class="footer" id="footer">
     © CymorTechServices 2026. Site created by the legendary Smiley Cymor. <br>
-    Contact admin: 
-    <a href="https://wa.me/254113821327" target="_blank">0113821327</a>
+    Contact admin: <a href="https://wa.me/254113821327" target="_blank">0113821327</a>
 </div>
 
 <script>
-
-/* 12 SENTENCE MESSAGES */
 const templates = {
-date:`I have been thinking about you every single moment lately and it feels like you are always on my mind. Your smile has a way of lighting up even my darkest days and I cannot ignore how special that feels. Every time I imagine spending time with you my heart races with excitement and anticipation. I find myself wondering what it would be like to share a beautiful evening together somewhere peaceful. The thought of laughing with you and creating memories together feels like something truly magical. I want to give you my time, my attention, and a moment that you will always remember. Life feels better whenever I imagine you being part of it in a deeper way. I believe that something beautiful could grow if we give it a chance. You deserve something thoughtful and genuine and I want to be that for you. I promise to make every moment worth your while and full of happiness. So here I am gathering the courage to ask you something that means a lot to me. Would you honor me by going on a date with me?`,
-
-apology:`I have been thinking deeply about everything that happened and it weighs heavily on my heart. I regret the pain that my actions caused and I wish I could turn back time to make things right. You mean so much to me and it hurts knowing that I made you feel otherwise. I have taken time to reflect and I truly understand where I went wrong. You deserve respect, care, and honesty from me at all times. I never want to be the reason behind your sadness again. I miss the connection we shared and the happiness we brought into each other’s lives. I am ready to grow and become better for both of us. I want to rebuild what we had with patience and sincerity. I am willing to listen, understand, and do whatever it takes to fix this. My heart is still yours and I hope yours still has space for me. Can you find it in your heart to forgive me and give us another chance?`,
-
-anniversary:`As I look back on everything we have shared together my heart fills with gratitude and joy. Every moment with you has been a blessing that I will never take for granted. You have been my strength during hard times and my happiness during the best times. I cherish every memory we have created and every laugh we have shared. Being with you feels like home no matter where we are in the world. You have shown me what true love really means in ways I never imagined. I admire your heart, your kindness, and everything that makes you who you are. I am so grateful that life brought us together in such a beautiful way. I want to continue building this amazing journey with you forever. There is so much more I want us to experience together. Today is a reminder of how far we have come and how strong we are. Will you continue this beautiful journey with me for many more years to come?`,
-
-birthday:`Today is a special day because it marks the moment the world was blessed with someone as amazing as you. You bring so much light and positivity into the lives of everyone around you. I feel incredibly lucky to be one of the people who gets to experience your presence. Your kindness, your smile, and your energy make everything better. I hope today brings you as much happiness as you bring into my life every day. You deserve love, joy, and success in everything you do. I admire everything about you and the way you carry yourself. You inspire me more than you probably realize. I want to be there for many more birthdays and celebrate every moment with you. You are truly one of a kind and incredibly special. I hope this new chapter brings even more blessings into your life. Can I be part of making your birthday even more memorable this year?`,
-
-missyou:`Lately I have been feeling the emptiness that comes from not having you close to me. Everything reminds me of you and the moments we have shared together. I miss your voice, your laugh, and the way you make everything feel right. Days feel longer and nights feel quieter without you around. I never realized how much of my happiness comes from simply being with you. I find myself replaying our memories over and over again in my mind. I wish I could reach out and bring you closer to me right now. You have become such an important part of my life. I cannot wait for the moment I get to see you again. Until then I carry you in my thoughts every single day. My heart feels incomplete without your presence beside me. Do you feel the same way about missing me too?`
+    date: `Can you feel how much you have been on my mind lately? Do you know how your smile lights up my darkest days? Is it possible for someone to be as special as you? Can you imagine us spending a peaceful evening together? Why does my heart race whenever I think of your laugh? Could we create beautiful memories that last a lifetime? Do you want to see what happens when we give this a chance? Is it time for me to show you how much you mean to me? Can you trust me to make every moment worth your while? Shall we try to build something truly magical together? Are you ready to let our story begin? Would you honor me by going on a date with me?`,
+    apology: `Can you forgive the pain that my actions have caused you? Is it possible for you to understand how heavy this weighs on my heart? Do you know how much I regret hurting someone as amazing as you? Can you see how deeply I have reflected on where I went wrong? Will you believe that I want to offer you the respect you deserve? Is there any way for me to prove that I am changing for the better? Can you imagine us rebuilding our connection with patience? Do you think we could find our way back to the happiness we once shared? Is my sincerity enough to soften the hurt I caused? Can you hear the honesty in my voice as I reach out to you? Will you give me a chance to make things right? Can you find it in your heart to forgive me and start again?`,
+    anniversary: `Can you believe how far we have come together since it all began? Do you realize how much gratitude I feel for every moment with you? Has there ever been a time when you weren't my greatest blessing? Do you know that you are my strength during the hardest times? Is it possible to cherish memories as much as I cherish ours? Do you feel that being with you truly feels like being home? Can you see that you have taught me what real love means? Why am I so lucky to have found someone as kind as you? Shall we keep building this amazing journey for years to come? Is there anything better than growing old beside you? Does the future look brighter whenever I picture us together? Will you continue this beautiful journey with me for many more years?`,
+    birthday: `Can you feel how special today is because of your presence in the world? Do you know how much light you bring into every life you touch? Is it possible to be as kind and genuine as you are? Can you see why I feel so lucky to experience your energy? Do you realize how much your smile makes my life better? Should we celebrate every single part of what makes you who you are? Can you feel how much you inspire everyone around you? Is today the perfect day to remind you of your worth? Do you know that you deserve all the joy in this universe? Can I be the one to make this birthday your most memorable yet? Will you let me celebrate you the way you truly deserve? Can I be a part of making your new chapter the best one yet?`,
+    missyou: `Can you feel the emptiness I have felt since you were last near? Is it possible for the days to feel this long without you? Why does everything around me remind me of your beautiful soul? Do you know how much I miss the sound of your voice? Can you imagine how quiet my nights feel without your laughter? Have you realized how much of my happiness comes from your presence? Do you know I spend my time replaying our memories in my head? Is there any way I could reach out and pull you closer right now? Do you feel like a part of me is missing when we are apart? Why is it so hard to wait until the moment I see you again? Can you carry me in your thoughts just as I carry you? Do you feel the same deep longing that I feel for you?`
 };
 
-/* FIXED MUSIC AUTOPLAY */
-window.addEventListener("load", () => {
+function playMusic() {
     const m = document.getElementById("music");
-    m.play().then(()=>{
-        m.muted = false;
-    }).catch(()=>{});
-});
+    m.play().catch(e => console.log("Waiting for user interaction"));
+}
 
-document.body.addEventListener("click", () => {
-    const m = document.getElementById("music");
-    m.muted = false;
-    m.play();
-}, { once:true });
+document.body.addEventListener("click", playMusic, { once: true });
 
-/* HEARTS */
-setInterval(()=>{
-    const heart=document.createElement("div");
-    heart.className="heart";
-    heart.innerText="❤";
-    heart.style.left=Math.random()*100+"vw";
-    heart.style.fontSize=(10+Math.random()*20)+"px";
-    document.body.appendChild(heart);
-    setTimeout(()=>heart.remove(),6000);
-},500);
+const params = new URLSearchParams(location.search);
+if(params.has("to")) {
+    document.getElementById("home").style.display = "none";
+    document.getElementById("letterPage").style.display = "flex";
+    document.getElementById("footer").style.display = "none"; 
+    
+    document.getElementById("title").innerText = "Dear " + params.get("to") + ",";
+    document.getElementById("body").innerText = params.get("msg") + "\n\nLove,\n" + params.get("from");
+    
+    if(params.get("bg")) {
+        const letter = document.getElementById("letter");
+        letter.style.backgroundImage = `url(${params.get("bg")})`;
+        letter.style.color = "white";
+        letter.style.textShadow = "0px 0px 5px rgba(0,0,0,0.5)";
+    }
+}
 
-/* LINK */
-function generateLink(){
-    const s=sender.value;
-    const r=recipient.value;
-    const msg=templates[purpose.value];
+function generateLink() {
+    const s = document.getElementById("sender").value;
+    const r = document.getElementById("recipient").value;
+    const msg = templates[document.getElementById("purpose").value];
+    const file = document.getElementById("imageUpload").files[0];
 
-    const file=imageUpload.files[0];
-
-    if(file){
-        const reader=new FileReader();
-        reader.onload=e=>createURL(s,r,msg,e.target.result);
+    if(file) {
+        const reader = new FileReader();
+        reader.onload = e => createURL(s, r, msg, e.target.result);
         reader.readAsDataURL(file);
-    }else{
-        createURL(s,r,msg,"");
+    } else {
+        createURL(s, r, msg, "");
     }
 }
 
-function createURL(s,r,msg,img){
-    const url=`${location.origin}${location.pathname}?to=${encodeURIComponent(r)}&from=${encodeURIComponent(s)}&msg=${encodeURIComponent(msg)}&bg=${encodeURIComponent(img)}`;
-    linkField.style.display="block";
-    linkField.value=url;
+function createURL(s, r, msg, img) {
+    const url = `${location.origin}${location.pathname}?to=${encodeURIComponent(r)}&from=${encodeURIComponent(s)}&msg=${encodeURIComponent(msg)}&bg=${encodeURIComponent(img)}`;
+    const field = document.getElementById("linkField");
+    field.style.display = "block";
+    field.value = url;
 }
 
-/* COPY */
-function copyLink(){
-    navigator.clipboard.writeText(linkField.value);
-    alert("Copied ❤️.Now share the link with your patner.");
+function copyLink() {
+    navigator.clipboard.writeText(document.getElementById("linkField").value);
+    alert("Copied ❤️.Now share to your patner.");
 }
 
-/* LOAD LETTER */
-const params=new URLSearchParams(location.search);
-if(params.has("to")){
-    home.style.display="none";
-    letterPage.style.display="flex";
-
-    title.innerText="Dear "+params.get("to")+",";
-    body.innerText=params.get("msg")+"\n\nLove,\n"+params.get("from");
-
-    if(params.get("bg")){
-        letter.style.backgroundImage=`url(${params.get("bg")})`;
-        letter.style.color="white";
-    }
-
-    document.getElementById("music").play().catch(()=>{});
-}
-
-/* FIXED NO BUTTON */
-function moveNo(){
+function moveNo() {
     const btn = document.getElementById("noBtn");
-    const maxX = window.innerWidth - 100;
-    const maxY = window.innerHeight - 100;
-
-    btn.style.position="fixed";
-    btn.style.left = Math.random() * maxX + "px";
-    btn.style.top = Math.random() * maxY + "px";
+    btn.style.position = "fixed";
+    btn.style.left = Math.random() * (window.innerWidth - 100) + "px";
+    btn.style.top = Math.random() * (window.innerHeight - 100) + "px";
 }
 
-/* CONFETTI */
-function yes(){
-    for(let i=0;i<50;i++){
-        const c=document.createElement("div");
-        c.className="confetti";
-        c.style.left=Math.random()*100+"vw";
-        c.style.background=`hsl(${Math.random()*360},100%,50%)`;
+function yes() {
+    for(let i=0; i<50; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = Math.random() * 100 + "vw";
+        c.style.background = `hsl(${Math.random() * 360}, 100%, 50%)`;
         document.body.appendChild(c);
-        setTimeout(()=>c.remove(),3000);
+        setTimeout(() => c.remove(), 3000);
     }
-    alert("I knew it 😍❤️.Thank you for always choosing us.I really appreciate.");
+    alert("I knew it 😍❤️.Thanks for always choosing us,i really appreciate it.");
 }
 
+setInterval(() => {
+    const heart = document.createElement("div");
+    heart.className = "heart";
+    heart.innerText = "❤";
+    heart.style.left = Math.random() * 100 + "vw";
+    heart.style.fontSize = (10 + Math.random() * 20) + "px";
+    document.body.appendChild(heart);
+    setTimeout(() => heart.remove(), 6000);
+}, 500);
 </script>
 </body>
 </html>
