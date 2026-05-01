@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cymor Love Hub</title>
+    <title>Cymor Love Hub.</title>
     <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Montserrat', sans-serif; background: #1a0606; color: white; overflow: hidden; }
+        body { font-family: 'Montserrat', sans-serif; background: #1a0606; color: white; overflow-x: hidden; }
 
         .heart { position: fixed; bottom: -10px; font-size: 20px; animation: floatUp 6s linear infinite; color: #ff4d6d; pointer-events: none; }
         @keyframes floatUp { 0% { transform: translateY(0) scale(1); } 100% { transform: translateY(-110vh) scale(1.5); } }
@@ -16,7 +16,7 @@
         .hero h1 { font-family: 'Great Vibes', cursive; font-size: 3rem; color: #ff4d6d; }
         .card { margin-top: 20px; background: rgba(255, 255, 255, 0.05); padding: 25px; border-radius: 15px; width: 90%; max-width: 500px; }
         input, select { width: 100%; padding: 12px; margin: 10px 0; border-radius: 8px; border: none; }
-        button { padding: 12px; border: none; border-radius: 25px; background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; cursor: pointer; }
+        button { padding: 12px; border: none; border-radius: 25px; background: linear-gradient(45deg, #ff416c, #ff4b2b); color: white; cursor: pointer; margin: 5px; }
 
         .letterPage { display: none; height: 100vh; justify-content: center; align-items: center; }
         .letter { background: white; color: #333; padding: 30px; border-radius: 10px; max-width: 600px; width: 90%; background-size: cover; background-position: center; z-index: 5; }
@@ -36,7 +36,7 @@
 </audio>
 
 <div class="hero" id="home">
-    <h1>Cymor Love Hub💌</h1>
+    <h1>Cymor Love Hub.💌</h1>
     <div class="card">
         <input id="sender" placeholder="Your Name">
         <input id="recipient" placeholder="Partner's Name">
@@ -48,7 +48,8 @@
             <option value="missyou">Miss You</option>
         </select>
         <input type="file" id="imageUpload">
-        <button onclick="generateLink()">Create Link ❤️</button>
+        <button onclick="preview()">Preview ❤️</button>
+        <button onclick="generateLink()">Create Link 🔗</button>
         <input id="linkField" style="margin-top:10px;display:none;">
         <button onclick="copyLink()">Copy Link</button>
     </div>
@@ -61,6 +62,7 @@
         <div style="text-align:center;margin-top:20px;">
             <button onclick="yes()">Yes ❤️</button>
             <button id="noBtn" onmouseover="moveNo()">No 😅</button>
+            <button onclick="closePreview()">Close Preview</button>
         </div>
     </div>
 </div>
@@ -71,20 +73,82 @@
 </div>
 
 <script>
-const templates = {
-    date: `Can you feel how much you have been on my mind lately? Do you know how your smile lights up my darkest days? Is it possible for someone to be as special as you? Can you imagine us spending a peaceful evening together? Why does my heart race whenever I think of your laugh? Could we create beautiful memories that last a lifetime? Do you want to see what happens when we give this a chance? Is it time for me to show you how much you mean to me? Can you trust me to make every moment worth your while? Shall we try to build something truly magical together? Are you ready to let our story begin? Would you honor me by going on a date with me?`,
-    apology: `Can you forgive the pain that my actions have caused you? Is it possible for you to understand how heavy this weighs on my heart? Do you know how much I regret hurting someone as amazing as you? Can you see how deeply I have reflected on where I went wrong? Will you believe that I want to offer you the respect you deserve? Is there any way for me to prove that I am changing for the better? Can you imagine us rebuilding our connection with patience? Do you think we could find our way back to the happiness we once shared? Is my sincerity enough to soften the hurt I caused? Can you hear the honesty in my voice as I reach out to you? Will you give me a chance to make things right? Can you find it in your heart to forgive me and start again?`,
-    anniversary: `Can you believe how far we have come together since it all began? Do you realize how much gratitude I feel for every moment with you? Has there ever been a time when you weren't my greatest blessing? Do you know that you are my strength during the hardest times? Is it possible to cherish memories as much as I cherish ours? Do you feel that being with you truly feels like being home? Can you see that you have taught me what real love means? Why am I so lucky to have found someone as kind as you? Shall we keep building this amazing journey for years to come? Is there anything better than growing old beside you? Does the future look brighter whenever I picture us together? Will you continue this beautiful journey with me for many more years?`,
-    birthday: `Can you feel how special today is because of your presence in the world? Do you know how much light you bring into every life you touch? Is it possible to be as kind and genuine as you are? Can you see why I feel so lucky to experience your energy? Do you realize how much your smile makes my life better? Should we celebrate every single part of what makes you who you are? Can you feel how much you inspire everyone around you? Is today the perfect day to remind you of your worth? Do you know that you deserve all the joy in this universe? Can I be the one to make this birthday your most memorable yet? Will you let me celebrate you the way you truly deserve? Can I be a part of making your new chapter the best one yet?`,
-    missyou: `Can you feel the emptiness I have felt since you were last near? Is it possible for the days to feel this long without you? Why does everything around me remind me of your beautiful soul? Do you know how much I miss the sound of your voice? Can you imagine how quiet my nights feel without your laughter? Have you realized how much of my happiness comes from your presence? Do you know I spend my time replaying our memories in my head? Is there any way I could reach out and pull you closer right now? Do you feel like a part of me is missing when we are apart? Why is it so hard to wait until the moment I see you again? Can you carry me in your thoughts just as I carry you? Do you feel the same deep longing that I feel for you?`
+const messages = {
+    date: [
+        "I have been thinking about you constantly and my heart feels so light whenever you are near. You have a unique way of making every single moment we share feel significant and bright. I want to share a truly beautiful evening with you where we can just talk and laugh. You deserve to be treated with all the care, respect, and kindness in the world. I have been planning this in my mind because you are so special to me. We could find a quiet place where we can focus entirely on one another. I believe that getting to know you better is one of the most exciting things I can imagine. My intention is simply to offer you my undivided attention and a lovely time. I feel that we have a connection worth exploring further in person. Everything feels better when I picture you by my side. Would you honor me by going on a date with me?",
+        "Every time I imagine spending time with you, I feel a sudden rush of genuine excitement. Your kindness is truly captivating, and I find myself smiling whenever I think of you. I want to take you somewhere peaceful to create some new, lasting memories together. I promise that I will do everything to make the night feel unforgettable for you. We deserve a chance to enjoy each other's company outside of our busy lives. You have such a beautiful perspective on the world that I admire deeply. I am confident that we would have a wonderful time just being together. I have been waiting for the right moment to gather my courage and ask you. My feelings for you are growing stronger every day that passes by. I really want us to have this experience and see where it leads. Shall we go out for a date?"
+    ],
+    apology: [
+        "I have been reflecting deeply on my actions lately and I feel terrible for the hurt I caused. You are incredibly special to me and I never intended to make you feel anything less than loved. I am truly sorry for my mistakes and I hope you can see my genuine regret. It hurts me to know that I am the reason behind your recent sadness. I value our connection more than I can express in just a few simple words. I am taking full responsibility for what happened because you deserve honesty and transparency. I am committed to earning back your trust through my future actions. I hope we can move past this difficult time and find our way back to being happy. I am ready to listen to whatever you need to say to me. My heart is yours and I am waiting for you. Can you find it in your heart to forgive me?",
+        "The thought of you being upset because of me weighs so heavily on my heart every single day. I cherish our bond so much and it kills me to think I damaged it. I am taking full responsibility for everything and I want to make things right. I know that trust takes time to rebuild but I am willing to put in the work. You deserve to be treated with the utmost respect and care at all times. I have learned a valuable lesson from this situation and I am changing. I want to be a better person for myself and for our relationship. I miss the laughter and the ease we used to share so dearly. I am here whenever you are ready to talk to me about this. Please believe that my intentions are sincere and filled with love. Will you give me a chance to apologize properly?"
+    ],
+    anniversary: [
+        "Looking back at everything we have shared, I am filled with so much gratitude for your presence. You have been my strength during the hard times and my happiness during the best times. Every milestone we reach together makes me love you more than I did the day before. I am so lucky to be on this journey with you and I cherish every memory. You have taught me the true meaning of love and partnership in such a profound way. I cannot wait to see what the future holds for us as we continue to grow. Everything feels so much better whenever you are around to share it with me. We have overcome so much and that makes our bond even stronger than before. I am so proud of how far we have come and how resilient we are. Today is a reminder of how much I love you. Will you continue this beautiful journey with me?",
+        "Today is a constant reminder of how incredible our bond truly is and how far we have traveled. You have been my rock, my best friend, and my home through every season of life. I cherish every single memory we have built together over this incredible time. I cannot wait to see what the future holds for us as we move forward together. You inspire me to be a better person and to look at the world with optimism. I am so glad that our paths crossed and that we found each other. Thank you for being yourself and for sharing your life with me every day. Everything feels so much brighter when I think about our history and our future. I am so happy to be yours and to have you as my partner. Let's keep making this our best year yet. Are you ready for many more years together?"
+    ],
+    birthday: [
+        "Today the world celebrates a truly amazing human being who brings so much light to everyone. You bring so much positivity into my life every day and I feel lucky to know you. I feel so fortunate to witness another year of your growth and your wonderful journey. You deserve all the happiness, joy, and success that this world can possibly give you. I have been looking forward to this day because it means so much to me. You are truly one of a kind and you possess such a rare, beautiful soul. I am here to support you and to celebrate everything that makes you unique. I want to make sure you feel loved and appreciated on this important day. May this new chapter bring you endless blessings and many exciting new adventures. I want to be by your side for all of it. Can I make this birthday extra memorable for you?",
+        "Wishing a wonderful birthday to the one person who makes everything brighter just by being there. Your energy is truly contagious and your heart is so kind to everyone you meet. I hope today brings you as much joy as you give to the people around you. You have a unique way of lifting people up and making them feel special. I am so lucky to be part of your life and to witness your story. You deserve the best of everything that this world has to offer you today. I have a lot of love for you and I want to express that clearly. It is your special day and I want you to feel as celebrated as possible. You are a true gift to everyone who has the pleasure of knowing you. I am already thinking about our next great memory. Will you let me celebrate you today?"
+    ],
+    missyou: [
+        "The days feel so much longer and the nights much quieter without you here beside me. I find myself thinking about your laugh and your smile throughout every single day. It is hard to express just how much I miss having you near to me. Everything around me serves as a constant reminder of our shared moments together. I keep replaying our favorite memories and they bring a bittersweet smile to my face. I wish I could reach out and hold your hand right now to feel close. The distance is hard, but it only makes me appreciate you and our time more. You are constantly on my mind and I carry you in my heart everywhere. I am counting down the days until we are finally together again soon. I hope you are thinking of me with as much love. Do you miss me as much as I miss you?",
+        "I feel a bit lost without your voice and your laughter filling up the space around me. You have become such a vital part of my life and I miss that presence. I never realized how much of my daily happiness was tied to simply being with you. I hope you know how much I truly care about you even when we are apart. I am thinking of you constantly and I find myself looking for you everywhere. It is difficult not having you close, but I know we have a strong bond. I am already planning the moment we get to see each other next time. Please know that you are loved and cherished more than words can say. I am here for you always and I cannot wait to be together. I hope this message brings a smile to your face today. Can you tell me that you miss me too?"
+    ]
 };
 
-function playMusic() {
-    const m = document.getElementById("music");
-    m.play().catch(e => console.log("Waiting for user interaction"));
+function preview() {
+    const s = document.getElementById("sender").value;
+    const r = document.getElementById("recipient").value;
+    const list = messages[document.getElementById("purpose").value];
+    const msg = list[Math.floor(Math.random() * list.length)];
+    const file = document.getElementById("imageUpload").files[0];
+
+    document.getElementById("title").innerText = "Dear " + r + ",";
+    document.getElementById("body").innerText = msg + "\n\nLove,\n" + s;
+    document.getElementById("letterPage").style.display = "flex";
+    document.getElementById("home").style.display = "none";
+    document.getElementById("footer").style.display = "none";
+
+    if(file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById("letter").style.backgroundImage = `url(${e.target.result})`;
+            document.getElementById("letter").style.color = "white";
+        };
+        reader.readAsDataURL(file);
+    }
 }
 
-document.body.addEventListener("click", playMusic, { once: true });
+function closePreview() {
+    document.getElementById("letterPage").style.display = "none";
+    document.getElementById("home").style.display = "flex";
+    document.getElementById("footer").style.display = "block";
+}
+
+function generateLink() {
+    const s = document.getElementById("sender").value;
+    const r = document.getElementById("recipient").value;
+    const list = messages[document.getElementById("purpose").value];
+    const msg = list[Math.floor(Math.random() * list.length)];
+    const file = document.getElementById("imageUpload").files[0];
+
+    if(file) {
+        const reader = new FileReader();
+        reader.onload = e => createURL(s, r, msg, e.target.result);
+        reader.readAsDataURL(file);
+    } else {
+        createURL(s, r, msg, "");
+    }
+}
+
+function initAudio() {
+    const m = document.getElementById("music");
+    m.play().catch(() => {});
+}
+
+document.body.addEventListener("click", () => {
+    initAudio();
+}, { once: true });
 
 const params = new URLSearchParams(location.search);
 if(params.has("to")) {
@@ -101,33 +165,20 @@ if(params.has("to")) {
         letter.style.color = "white";
         letter.style.textShadow = "0px 0px 5px rgba(0,0,0,0.5)";
     }
-}
-
-function generateLink() {
-    const s = document.getElementById("sender").value;
-    const r = document.getElementById("recipient").value;
-    const msg = templates[document.getElementById("purpose").value];
-    const file = document.getElementById("imageUpload").files[0];
-
-    if(file) {
-        const reader = new FileReader();
-        reader.onload = e => createURL(s, r, msg, e.target.result);
-        reader.readAsDataURL(file);
-    } else {
-        createURL(s, r, msg, "");
-    }
+    initAudio();
 }
 
 function createURL(s, r, msg, img) {
     const url = `${location.origin}${location.pathname}?to=${encodeURIComponent(r)}&from=${encodeURIComponent(s)}&msg=${encodeURIComponent(msg)}&bg=${encodeURIComponent(img)}`;
     const field = document.getElementById("linkField");
     field.style.display = "block";
-    field.value = url;
+    field.value = "Click the link to open your secret message! 💌 " + url;
 }
 
 function copyLink() {
-    navigator.clipboard.writeText(document.getElementById("linkField").value);
-    alert("Copied ❤️.Now share to your patner.");
+    const field = document.getElementById("linkField");
+    navigator.clipboard.writeText(field.value);
+    alert("Copied ❤️.Share the link with your patner.\n\n(Tip: Share this on your status!)");
 }
 
 function moveNo() {
@@ -146,7 +197,7 @@ function yes() {
         document.body.appendChild(c);
         setTimeout(() => c.remove(), 3000);
     }
-    alert("I knew it 😍❤️.Thanks for always choosing us,i really appreciate it.");
+    alert("I knew it 😍❤️.Thanks for choosing us again,i really appreciate you.");
 }
 
 setInterval(() => {
