@@ -128,8 +128,8 @@ button{
 
 <body>
 
-<!-- UPDATED ROMANTIC MUSIC -->
-<audio id="music" loop autoplay>
+<!-- FIXED MUSIC -->
+<audio id="music" loop autoplay muted>
 <source src="https://cdn.pixabay.com/download/audio/2022/11/03/audio_6f9b3c4f0d.mp3?filename=romantic-love-ambient-124008.mp3">
 </audio>
 
@@ -168,7 +168,7 @@ button{
     </div>
 </div>
 
-<!-- NEW FOOTER -->
+<!-- FOOTER -->
 <div class="footer">
     © CymorTechServices 2026. Site created by the legendary Smiley Cymor. <br>
     Contact admin: 
@@ -190,8 +190,19 @@ birthday:`Today is a special day because it marks the moment the world was bless
 missyou:`Lately I have been feeling the emptiness that comes from not having you close to me. Everything reminds me of you and the moments we have shared together. I miss your voice, your laugh, and the way you make everything feel right. Days feel longer and nights feel quieter without you around. I never realized how much of my happiness comes from simply being with you. I find myself replaying our memories over and over again in my mind. I wish I could reach out and bring you closer to me right now. You have become such an important part of my life. I cannot wait for the moment I get to see you again. Until then I carry you in my thoughts every single day. My heart feels incomplete without your presence beside me. Do you feel the same way about missing me too?`
 };
 
-/* MUSIC AUTOPLAY FIX */
-document.body.addEventListener("click",()=>music.play(),{once:true});
+/* FIXED MUSIC AUTOPLAY */
+window.addEventListener("load", () => {
+    const m = document.getElementById("music");
+    m.play().then(()=>{
+        m.muted = false;
+    }).catch(()=>{});
+});
+
+document.body.addEventListener("click", () => {
+    const m = document.getElementById("music");
+    m.muted = false;
+    m.play();
+}, { once:true });
 
 /* HEARTS */
 setInterval(()=>{
@@ -247,14 +258,18 @@ if(params.has("to")){
         letter.style.color="white";
     }
 
-    music.play().catch(()=>{});
+    document.getElementById("music").play().catch(()=>{});
 }
 
-/* BUTTON FUN */
+/* FIXED NO BUTTON */
 function moveNo(){
-    noBtn.style.position="absolute";
-    noBtn.style.left=Math.random()*80+"vw";
-    noBtn.style.top=Math.random()*80+"vh";
+    const btn = document.getElementById("noBtn");
+    const maxX = window.innerWidth - 100;
+    const maxY = window.innerHeight - 100;
+
+    btn.style.position="fixed";
+    btn.style.left = Math.random() * maxX + "px";
+    btn.style.top = Math.random() * maxY + "px";
 }
 
 /* CONFETTI */
@@ -267,7 +282,7 @@ function yes(){
         document.body.appendChild(c);
         setTimeout(()=>c.remove(),3000);
     }
-    alert("I knew it 😍❤️. Thank you for always choosing us,i don't take it for granted.");
+    alert("I knew it 😍❤️.Thank you for always choosing us.I really appreciate.");
 }
 
 </script>
