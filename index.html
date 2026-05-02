@@ -98,12 +98,19 @@ button:hover { background: #e63950; transform: scale(1.02); }
     line-height: 1.6;
     background-size: cover;
     background-position: center;
+
+    /* 🔥 FIX: keep everything INSIDE */
+    overflow: hidden;
 }
 
 .typewriter {
     min-height: 150px;
     border-right: 2px solid #ff4d6d;
     padding-right: 5px;
+
+    /* 🔥 FIX: prevent overflow */
+    word-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .heart {
@@ -131,7 +138,7 @@ footer {
 
 <body>
 
-<audio id="music" loop>
+<audio id="music" loop preload="auto">
 <source src="https://files.catbox.moe/8c9z1r.mp3" type="audio/mpeg">
 </audio>
 
@@ -180,34 +187,37 @@ footer {
 </div>
 </div>
 
-<footer>
-CymorTechServices2026.|Site made by the legendary Smiley Cymor<br>
+<footer id="footer">
+CymorTechServices2026.Site | Made by the legendary Smiley Cymor<br>
 Contact Creator: 0113821327
 </footer>
 
 <script>
-// HEARTS ANIMATION
+// HEARTS
 setInterval(()=>{
-    const h = document.createElement("div");
-    h.className = "heartFloat";
-    h.innerText = "❤";
-    h.style.left = Math.random()*100+"vw";
-    h.style.fontSize = (10+Math.random()*20)+"px";
+    const h=document.createElement("div");
+    h.className="heartFloat";
+    h.innerText="❤";
+    h.style.left=Math.random()*100+"vw";
+    h.style.fontSize=(10+Math.random()*20)+"px";
     document.body.appendChild(h);
     setTimeout(()=>h.remove(),6000);
 },500);
 
-// AUDIO AUTO PLAY
+// 🔥 STRONG AUDIO FIX
 function playMusic(){
     const m=document.getElementById("music");
+    m.volume=0.7;
     m.play().catch(()=>{});
 }
-document.body.addEventListener("click",playMusic,{once:true});
-document.body.addEventListener("touchstart",playMusic,{once:true});
+
+// multiple triggers (mobile-safe)
+document.addEventListener("click", playMusic, {once:true});
+document.addEventListener("touchstart", playMusic, {once:true});
 
 // MESSAGE BUILDER (unchanged)
-const buildMessage = (type) => {
-const sentences = {
+const buildMessage=(type)=>{
+const sentences={
 date:["I’ve been thinking of you constantly.","You bring such light into my world.","I love the way we talk for hours.","Your smile is my favorite sight.","I want to take you somewhere special.","You make my heart beat faster.","Life is better with you near.","I treasure every moment we share.","I feel a deep connection to you.","You are truly one of a kind.","I can't stop daydreaming about us.","Would you go on a date with me?"],
 missyou:["The house feels too quiet today.","I keep looking for your face.","My phone feels empty without your text.","I miss the sound of your laugh.","Time moves so slowly without you.","I find myself checking our chats.","Everything reminds me of you.","My days feel incomplete and hollow.","I am counting the days until we meet.","Your absence is a heavy burden.","I crave your warmth right now.","Do you miss me as much as I miss you?"],
 apology:["I have been reflecting on things.","I know I let you down.","My actions do not reflect my love.","I am truly sorry for the pain.","Please look past my mistakes.","I value our bond above all else.","I hate that I caused you hurt.","I want to make things right.","My heart is heavy with regret.","Can we find our way back?","I promise to be better for you.","Will you forgive me and let me make it up to you?"],
@@ -218,7 +228,7 @@ proposal:["I have known for a long time.","You are the one I want to build somet
 return sentences[type].join(" ");
 };
 
-// GENERATE LINK WITH IMAGE
+// LINK
 function generateLink(){
 const s=btoa(sender.value);
 const r=btoa(recipient.value);
@@ -228,8 +238,7 @@ const file=imageUpload.files[0];
 if(file){
 const reader=new FileReader();
 reader.onload=e=>{
-const img=btoa(e.target.result);
-createURL(s,r,m,img);
+createURL(s,r,m,btoa(e.target.result));
 };
 reader.readAsDataURL(file);
 }else{
@@ -238,8 +247,7 @@ createURL(s,r,m,"");
 }
 
 function createURL(s,r,m,img){
-const url=`${location.origin}${location.pathname}?f=${s}&t=${r}&m=${m}&bg=${img}`;
-linkField.value=url;
+linkField.value=`${location.origin}${location.pathname}?f=${s}&t=${r}&m=${m}&bg=${img}`;
 linkContainer.classList.remove("hidden");
 }
 
@@ -248,6 +256,7 @@ const params=new URLSearchParams(location.search);
 if(params.has("m")){
 home.classList.add("hidden");
 viewPage.classList.remove("hidden");
+footer.style.display="none"; // 🔥 hide footer
 
 envSender.innerText=atob(params.get("f"));
 title.innerText="Dear "+atob(params.get("t"))+",";
@@ -258,9 +267,9 @@ letter.style.color="white";
 }
 }
 
-// OPEN LETTER
+// OPEN
 function openLetter(){
-playMusic();
+playMusic(); // 🔥 guaranteed play
 envelope.classList.add("hidden");
 letter.classList.remove("hidden");
 
@@ -283,7 +292,7 @@ window.open(`https://wa.me/254113821327?text=Reply%20to%20${senderName}:%20${enc
 // COPY
 function copyLink(){
 navigator.clipboard.writeText(linkField.value);
-alert("Link copied! Share it ❤️");
+alert("Link copied! Share it with your loved one.❤️");
 }
 </script>
 
