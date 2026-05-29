@@ -1,0 +1,33 @@
+{
+  "name": "smiley-cymor-bot",
+  "version": "1.0.0",
+  "description": "Smiley Cymor Bot — The Legendary WhatsApp Bot by Cymor Tech Services",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "web": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.24.3",
+    "@whiskeysockets/baileys": "^6.7.7",
+    "axios": "^1.7.2",
+    "better-sqlite3": "^9.4.3",
+    "cheerio": "^1.0.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "fluent-ffmpeg": "^2.1.3",
+    "groq-sdk": "^0.3.3",
+    "node-cache": "^5.1.2",
+    "pino": "^9.2.0",
+    "qrcode": "^1.5.4",
+    "qrcode-terminal": "^0.12.0",
+    "sharp": "^0.33.4",
+    "ytdl-core": "^4.11.5",
+    "yt-search": "^2.10.4",
+    "node-fetch": "^3.3.2",
+    "form-data": "^4.0.0",
+    "mime-types": "^2.1.35"
+  }
+}
