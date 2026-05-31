@@ -8,7 +8,7 @@ export const CONFIG = {
   motto:       process.env.MOTTO         || 'Always a winner',
   footer:      process.env.FOOTER        || 'Powered by Cymor Tech Services',
   prefix:      process.env.PREFIX        || '.',
-  port:        parseInt(process.env.PORT) || 3000,
+  port:        process.env.PORT || 10000,
   sessionFolder: process.env.SESSION_FOLDER || './auth_info',
 
   groqModel:   process.env.GROQ_MODEL    || 'llama3-70b-8192',
