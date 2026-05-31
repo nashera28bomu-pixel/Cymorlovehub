@@ -131,9 +131,9 @@ app.get('/api/status/:phone', (req, res) => {
 });
 
 // ─── Start server ─────────────────────────────────────────────────────────────
-app.listen(CONFIG.port, () => {
-  console.log(`\n🌐 Pair page running at http://localhost:${CONFIG.port}`);
-  console.log(`📱 Share this URL so users can connect their WhatsApp\n`);
+app.listen(CONFIG.port, '0.0.0.0', () => {
+  console.log(`\n🌐 Pair page running at https://smileycymorbot.onrender.com`);
 });
+
 
 export default app;
