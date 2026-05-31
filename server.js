@@ -9,6 +9,7 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
 } from '@whiskeysockets/baileys';
+import makeInMemoryStore from '@whiskeysockets/baileys/lib/Store/make-in-memory-store.js';
 import pino from 'pino';
 import QRCode from 'qrcode';
 import { saveSession } from './src/database.js';
