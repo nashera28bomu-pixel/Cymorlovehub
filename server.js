@@ -9,7 +9,9 @@ import makeWASocket, {
   DisconnectReason,
   fetchLatestBaileysVersion,
 } from '@whiskeysockets/baileys';
-import makeInMemoryStore from '@whiskeysockets/baileys/lib/Store/make-in-memory-store.js';
+import {
+  makeInMemoryStore
+} from '@whiskeysockets/baileys';
 import pino from 'pino';
 import QRCode from 'qrcode';
 import { saveSession } from './src/database.js';
@@ -18,7 +20,9 @@ import { CONFIG } from './src/config.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const logger = pino({ level: 'silent' });
-
+const store = makeInMemoryStore({
+  logger: pino({ level: 'silent' })
+});
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
