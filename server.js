@@ -7,8 +7,8 @@ import { fileURLToPath } from 'url';
 
 import makeWASocket, {
   useMultiFileAuthState,
-  DisconnectReason,
   fetchLatestBaileysVersion,
+  DisconnectReason
 } from '@whiskeysockets/baileys';
 
 import pino from 'pino';
@@ -17,23 +17,23 @@ import QRCode from 'qrcode';
 import { saveSession } from './src/database.js';
 import { CONFIG } from './src/config.js';
 
-// ─── Setup ───────────────────────────────────────────────────────────────────
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
+
 const logger = pino({ level: 'silent' });
 
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Active sessions
+// ─── Active sessions ─────────────────────────────────────────────────────────
 const pairingSessions = new Map();
 
-// ─── Health Check (Render keep-alive) ────────────────────────────────────────
+// ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({
     status: 'alive',
     bot: CONFIG.botName,
-    owner: CONFIG.ownerName,
+    owner: CONFIG.ownerName
   });
 });
 
@@ -42,7 +42,9 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pair.html'));
 });
 
-// ─── Pair endpoint ───────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────────
+//  CLEAN PAIRING SYSTEM (FIXED)
+// ──────────────────────────────────────────────────────────────────────────────
 app.post('/api/pair', async (req, res) => {
   const { phone, method } = req.body;
 
@@ -51,11 +53,20 @@ app.post('/api/pair', async (req, res) => {
   }
 
   const cleanPhone = phone.replace(/[^0-9]/g, '');
+
   if (cleanPhone.length < 10) {
     return res.status(400).json({ error: 'Invalid phone number' });
   }
 
-  // cleanup old session if exists
+  let responded = false;
+
+  const safeReply = (data, status = 200) => {
+    if (responded) return;
+    responded = true;
+    return res.status(status).json(data);
+  };
+
+  // ─── Cleanup old session ───────────────────────────────────────────────────
   if (pairingSessions.has(cleanPhone)) {
     try {
       pairingSessions.get(cleanPhone).sock?.end();
@@ -74,10 +85,10 @@ app.post('/api/pair', async (req, res) => {
 
     const sock = makeWASocket({
       version,
-      logger,
       auth: state,
+      logger,
       printQRInTerminal: false,
-      browser: ['Smiley Cymor Bot', 'Chrome', '1.0.0'],
+      browser: ['Smiley Cymor Bot', 'Chrome', '1.0.0']
     });
 
     pairingSessions.set(cleanPhone, {
@@ -86,63 +97,14 @@ app.post('/api/pair', async (req, res) => {
       sessionPath,
       status: 'pending',
       qr: null,
-      code: null,
+      code: null
     });
 
     sock.ev.on('creds.update', saveCreds);
 
-    // ─── Pairing Code Method ───────────────────────────────────────────────
-    if (method === 'code') {
-  sock.ev.on('connection.update', async (update) => {
-    const { connection } = update;
-
-    if (connection === 'open') return;
-
-    try {
-      const code = await sock.requestPairingCode(cleanPhone);
-
-      const formatted = code.match(/.{1,4}/g)?.join('-') || code;
-
-      const session = pairingSessions.get(cleanPhone);
-      if (session) {
-        session.code = formatted;
-        session.status = 'code_ready';
-      }
-
-      return res.json({
-        success: true,
-        method: 'code',
-        code: formatted
-      });
-
-    } catch (err) {
-      return res.status(500).json({
-        error: err.message
-      });
-    }
-  });
-
-  return;
-    }
-
-    // ─── QR Method ──────────────────────────────────────────────────────────
+    // ─── CONNECTION LISTENER (IMPORTANT) ────────────────────────────────────
     sock.ev.on('connection.update', async (update) => {
-      const { qr, connection } = update;
-
-      if (qr) {
-        try {
-          const qrImage = await QRCode.toDataURL(qr, {
-            width: 300,
-            margin: 2,
-          });
-
-          const session = pairingSessions.get(cleanPhone);
-          if (session) {
-            session.qr = qrImage;
-            session.status = 'qr_ready';
-          }
-        } catch {}
-      }
+      const { connection } = update;
 
       if (connection === 'open') {
         const session = pairingSessions.get(cleanPhone);
@@ -151,30 +113,85 @@ app.post('/api/pair', async (req, res) => {
           session.status = 'connected';
 
           saveSession(cleanPhone, sessionId);
+        }
+      }
 
-          // save session snapshot
-          const sessionFiles = fs
-            .readdirSync(sessionPath)
-            .filter((f) => f.endsWith('.json'))
-            .map((f) => ({
-              name: f,
-              data: fs.readFileSync(path.join(sessionPath, f), 'utf8'),
-            }));
+      if (connection === 'close') {
+        const session = pairingSessions.get(cleanPhone);
 
-          session.sessionData = Buffer.from(
-            JSON.stringify(sessionFiles)
-          ).toString('base64');
+        if (session) {
+          const code = session.lastDisconnect?.error?.output?.statusCode;
+
+          if (code === DisconnectReason.loggedOut) {
+            pairingSessions.delete(cleanPhone);
+          }
         }
       }
     });
 
-    res.json({
-      success: true,
-      method: 'qr',
-      message: 'QR generation started. Poll /api/status/:phone',
+    // ────────────────────────────────────────────────────────────────────────
+    // PAIRING CODE METHOD (FIXED TIMING)
+    // ────────────────────────────────────────────────────────────────────────
+    if (method === 'code') {
+      setTimeout(async () => {
+        try {
+          const code = await sock.requestPairingCode(cleanPhone);
+
+          const formatted =
+            code?.match(/.{1,4}/g)?.join('-') || code;
+
+          const session = pairingSessions.get(cleanPhone);
+
+          if (session) {
+            session.code = formatted;
+            session.status = 'code_ready';
+          }
+
+          return safeReply({
+            success: true,
+            method: 'code',
+            code: formatted
+          });
+
+        } catch (err) {
+          return safeReply({
+            error: 'Failed to generate pairing code',
+            details: err.message
+          }, 500);
+        }
+      }, 2500);
+
+      return;
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
+    // QR METHOD (OPTIONAL)
+    // ────────────────────────────────────────────────────────────────────────
+    sock.ev.on('connection.update', async ({ qr }) => {
+      if (!qr) return;
+
+      try {
+        const qrImage = await QRCode.toDataURL(qr, {
+          width: 300,
+          margin: 2
+        });
+
+        const session = pairingSessions.get(cleanPhone);
+
+        if (session) {
+          session.qr = qrImage;
+          session.status = 'qr_ready';
+        }
+      } catch {}
     });
 
-    // ─── Auto cleanup ──────────────────────────────────────────────────────
+    safeReply({
+      success: true,
+      method: 'qr',
+      message: 'QR generation started'
+    });
+
+    // ─── Auto cleanup ────────────────────────────────────────────────────────
     setTimeout(() => {
       const session = pairingSessions.get(cleanPhone);
 
@@ -190,14 +207,15 @@ app.post('/api/pair', async (req, res) => {
         } catch {}
       }
     }, 5 * 60 * 1000);
+
   } catch (err) {
-    return res.status(500).json({
-      error: err.message,
-    });
+    return safeReply({
+      error: err.message
+    }, 500);
   }
 });
 
-// ─── Status endpoint ─────────────────────────────────────────────────────────
+// ─── STATUS CHECK ────────────────────────────────────────────────────────────
 app.get('/api/status/:phone', (req, res) => {
   const phone = req.params.phone.replace(/[^0-9]/g, '');
   const session = pairingSessions.get(phone);
@@ -206,20 +224,18 @@ app.get('/api/status/:phone', (req, res) => {
     return res.json({ status: 'not_found' });
   }
 
-  res.json({
+  return res.json({
     status: session.status,
     qr: session.qr || null,
     code: session.code || null,
-    sessionId: session.status === 'connected' ? session.sessionId : null,
-    sessionData:
-      session.status === 'connected' ? session.sessionData : null,
+    sessionId: session.status === 'connected' ? session.sessionId : null
   });
 });
 
-// ─── Start server ────────────────────────────────────────────────────────────
+// ─── START SERVER ────────────────────────────────────────────────────────────
 app.listen(CONFIG.port, '0.0.0.0', () => {
   console.log(`🌐 Server running on port ${CONFIG.port}`);
-  console.log(`🔗 https://smileycymorbot.onrender.com`);
+  console.log(`🚀 Pair system ready`);
 });
 
 export default app;
