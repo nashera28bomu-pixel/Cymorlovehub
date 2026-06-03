@@ -93,32 +93,36 @@ app.post('/api/pair', async (req, res) => {
 
     // ─── Pairing Code Method ───────────────────────────────────────────────
     if (method === 'code') {
-      setTimeout(async () => {
-        try {
-          const code = await sock.requestPairingCode(cleanPhone);
+  sock.ev.on('connection.update', async (update) => {
+    const { connection } = update;
 
-          const formatted = code?.match(/.{1,4}/g)?.join('-') || code;
+    if (connection === 'open') return;
 
-          const session = pairingSessions.get(cleanPhone);
-          if (session) {
-            session.code = formatted;
-            session.status = 'code_ready';
-          }
+    try {
+      const code = await sock.requestPairingCode(cleanPhone);
 
-          return res.json({
-            success: true,
-            method: 'code',
-            code: formatted,
-          });
-        } catch (err) {
-          return res.status(500).json({
-            error: 'Failed to generate pairing code',
-            details: err.message,
-          });
-        }
-      }, 2000);
+      const formatted = code.match(/.{1,4}/g)?.join('-') || code;
 
-      return;
+      const session = pairingSessions.get(cleanPhone);
+      if (session) {
+        session.code = formatted;
+        session.status = 'code_ready';
+      }
+
+      return res.json({
+        success: true,
+        method: 'code',
+        code: formatted
+      });
+
+    } catch (err) {
+      return res.status(500).json({
+        error: err.message
+      });
+    }
+  });
+
+  return;
     }
 
     // ─── QR Method ──────────────────────────────────────────────────────────
