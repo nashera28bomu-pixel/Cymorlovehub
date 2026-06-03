@@ -64,7 +64,7 @@ app.post('/api/pair', async (req, res) => {
   }
 
   const sessionId = `session_${cleanPhone}_${Date.now()}`;
-  const sessionPath = path.join('./data/sessions', sessionId);
+  const sessionPath = path.join('/tmp', sessionId);
 
   fs.mkdirSync(sessionPath, { recursive: true });
 
