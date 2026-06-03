@@ -1,181 +1,279 @@
-// ─── index.js ────────────────────────────────────────────────────────────────
 import 'dotenv/config';
 import fs from 'fs';
 import pino from 'pino';
 import qrcode from 'qrcode-terminal';
 
 import makeWASocket, {
-  useMultiFileAuthState,
-  DisconnectReason,
-  fetchLatestBaileysVersion,
-  makeInMemoryStore,
-  downloadMediaMessage,
+useMultiFileAuthState,
+DisconnectReason,
+fetchLatestBaileysVersion,
+makeInMemoryStore
 } from '@whiskeysockets/baileys';
 
 import { handleMessage } from './src/router.js';
 import { CONFIG } from './src/config.js';
-import { getAllAutoStatus, getAntiDelete, getWelcome, getAntiLink } from './src/database.js';
+import {
+getAllAutoStatus,
+getAntiDelete,
+getWelcome,
+getAntiLink
+} from './src/database.js';
 
 const logger = pino({ level: 'silent' });
-const store  = makeInMemoryStore({ logger });
 
-if (!fs.existsSync(CONFIG.sessionFolder)) fs.mkdirSync(CONFIG.sessionFolder, { recursive: true });
+if (!fs.existsSync(CONFIG.sessionFolder)) {
+fs.mkdirSync(CONFIG.sessionFolder, { recursive: true });
+}
 
-// Track deleted messages for anti-delete
+const store = makeInMemoryStore({ logger });
 const messageCache = new Map();
 
+function extractText(msg) {
+const m = msg?.message;
+
+return (
+m?.conversation ||
+m?.extendedTextMessage?.text ||
+m?.imageMessage?.caption ||
+m?.videoMessage?.caption ||
+''
+);
+}
+
 async function startBot() {
-  const { state, saveCreds } = await useMultiFileAuthState(CONFIG.sessionFolder);
-  const { version }          = await fetchLatestBaileysVersion();
+try {
+const { state, saveCreds } = await useMultiFileAuthState(
+CONFIG.sessionFolder
+);
 
-  console.log('\n╔══════════════════════════════════════════╗');
-  console.log(`║   🌟 ${CONFIG.botName.toUpperCase().padEnd(34)} ║`);
-  console.log(`║   👑 ${CONFIG.ownerName.padEnd(34)} ║`);
-  console.log(`║   💬 "${CONFIG.motto.padEnd(32)}" ║`);
-  console.log('╚══════════════════════════════════════════╝\n');
+const { version } = await fetchLatestBaileysVersion();
 
-  const sock = makeWASocket({
-    version,
-    logger,
-    auth:                  state,
-    printQRInTerminal:     false,
-    browser:               ['Smiley Cymor Bot', 'Chrome', '1.0.0'],
-    syncFullHistory:       false,
-    generateHighQualityLinkPreview: false,
-  });
+console.log(`\n🚀 Starting ${CONFIG.botName}...\n`);
 
-  store.bind(sock.ev);
+const sock = makeWASocket({
+  version,
+  auth: state,
+  logger,
+  printQRInTerminal: false,
+  browser: ['Smiley Cymor Bot', 'Chrome', '1.0.0']
+});
 
-  // ── Connection updates ──────────────────────────────────────────────────────
-  sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
+store.bind(sock.ev);
+
+sock.ev.on('creds.update', saveCreds);
+
+sock.ev.on(
+  'connection.update',
+  async ({ connection, lastDisconnect, qr }) => {
     if (qr) {
-      console.log('\n📱 SCAN THIS QR CODE WITH WHATSAPP:\n');
+      console.log('\n📱 Scan QR Code:\n');
       qrcode.generate(qr, { small: true });
-      console.log('\n👆 WhatsApp → Three dots → Linked Devices → Link a Device\n');
-    }
-
-    if (connection === 'close') {
-      const code = lastDisconnect?.error?.output?.statusCode;
-      if (code !== DisconnectReason.loggedOut) {
-        console.log(`🔄 Reconnecting (code: ${code})...`);
-        setTimeout(startBot, 5000);
-      } else {
-        console.log('❌ Logged out. Delete auth_info and restart.');
-        process.exit(0);
-      }
     }
 
     if (connection === 'open') {
-      console.log(`\n✅ ${CONFIG.botName} is ONLINE! 🚀`);
-      console.log(`📱 Connected as: ${sock.user?.id}`);
-      console.log(`👑 Owner: ${CONFIG.ownerName}`);
-      console.log(`💬 ${CONFIG.motto}\n`);
-      console.log(`🌐 Pair page: http://localhost:${CONFIG.port}\n`);
+      console.log(`✅ ${CONFIG.botName} Connected`);
+      console.log(`📱 ${sock.user?.id}`);
     }
-  });
 
-  sock.ev.on('creds.update', saveCreds);
+    if (connection === 'close') {
+      const code =
+        lastDisconnect?.error?.output?.statusCode;
 
-  // ── Incoming messages ───────────────────────────────────────────────────────
-  sock.ev.on('messages.upsert', async ({ messages, type }) => {
+      console.log('⚠ Connection Closed:', code);
+
+      if (code !== DisconnectReason.loggedOut) {
+        console.log('🔄 Reconnecting...');
+        setTimeout(startBot, 5000);
+      } else {
+        console.log('❌ Logged Out');
+        process.exit(1);
+      }
+    }
+  }
+);
+
+sock.ev.on(
+  'messages.upsert',
+  async ({ messages, type }) => {
     if (type !== 'notify') return;
 
     for (const msg of messages) {
-      if (!msg.message || msg.key.fromMe) continue;
-      if (msg.key.remoteJid === 'status@broadcast') continue;
-
-      const jid      = msg.key.remoteJid;
-      const isGroup  = jid.endsWith('@g.us');
-      const sender   = msg.key.participant?.replace('@s.whatsapp.net','') || jid.replace('@s.whatsapp.net','');
-
-      // Cache message for anti-delete
-      messageCache.set(msg.key.id, { msg, jid, sender });
-      setTimeout(() => messageCache.delete(msg.key.id), 5 * 60 * 1000);
-
-      // Anti-link check in groups
-      if (isGroup) {
-        const body = extractText(msg);
-        if (getAntiLink(jid) && /https?:\/\//.test(body)) {
-          try {
-            await sock.groupParticipantsUpdate(jid, [msg.key.participant], 'remove');
-            await sock.sendMessage(jid, { text: `🔗 *Anti-Link:* @${sender} was removed for sending a link.\n\n_${CONFIG.footer}_`, mentions: [msg.key.participant] });
-          } catch {}
-          continue;
-        }
-      }
-
-      // Route to command handler
       try {
-        await handleMessage(sock, msg, isGroup);
+        if (!msg.message) continue;
+        if (msg.key.fromMe) continue;
+
+        const jid = msg.key.remoteJid;
+
+        if (jid === 'status@broadcast') continue;
+
+        const isGroup = jid.endsWith('@g.us');
+
+        const sender =
+          msg.key.participant?.replace(
+            '@s.whatsapp.net',
+            ''
+          ) ||
+          jid.replace('@s.whatsapp.net', '');
+
+        messageCache.set(msg.key.id, {
+          msg,
+          jid,
+          sender
+        });
+
+        setTimeout(() => {
+          messageCache.delete(msg.key.id);
+        }, 300000);
+
+        if (isGroup) {
+          const body = extractText(msg);
+
+          if (
+            getAntiLink(jid) &&
+            /https?:\/\//i.test(body)
+          ) {
+            try {
+              await sock.groupParticipantsUpdate(
+                jid,
+                [msg.key.participant],
+                'remove'
+              );
+
+              await sock.sendMessage(jid, {
+                text:
+                  `🔗 Anti-Link Enabled\n\n` +
+                  `@${sender} removed.`,
+                mentions: [msg.key.participant]
+              });
+            } catch {}
+            continue;
+          }
+        }
+
+        await handleMessage(
+          sock,
+          msg,
+          isGroup
+        );
       } catch (err) {
-        console.error('Handler error:', err.message);
+        console.error(
+          'Message Error:',
+          err.message
+        );
       }
     }
-  });
+  }
+);
 
-  // ── Status updates (auto-view) ──────────────────────────────────────────────
-  sock.ev.on('messages.upsert', async ({ messages }) => {
+sock.ev.on(
+  'messages.upsert',
+  async ({ messages }) => {
     for (const msg of messages) {
-      if (msg.key.remoteJid !== 'status@broadcast') continue;
-      const autoViewers = getAllAutoStatus();
-      for (const phone of autoViewers) {
+      if (
+        msg.key.remoteJid !==
+        'status@broadcast'
+      )
+        continue;
+
+      const viewers = getAllAutoStatus();
+
+      if (viewers.length > 0) {
         try {
           await sock.readMessages([msg.key]);
         } catch {}
       }
     }
-  });
+  }
+);
 
-  // ── Anti-delete ─────────────────────────────────────────────────────────────
-  sock.ev.on('messages.delete', async (item) => {
-    if (!('keys' in item)) return;
+sock.ev.on(
+  'messages.delete',
+  async item => {
+    if (!item?.keys) return;
+
     for (const key of item.keys) {
       const cached = messageCache.get(key.id);
+
       if (!cached) continue;
-      const { msg, jid, sender } = cached;
 
-      // Only forward to users with antidelete ON
-      if (!getAntiDelete(sender)) continue;
+      const {
+        msg,
+        jid,
+        sender
+      } = cached;
 
-      const body = extractText(msg.msg);
+      if (!getAntiDelete(sender))
+        continue;
+
+      const body = extractText(msg);
+
       if (!body) continue;
 
       try {
         await sock.sendMessage(jid, {
-          text: `🗑 *Anti-Delete*\n\n*From:* @${sender}\n*Message:* ${body}\n\n_${CONFIG.footer}_`,
-          mentions: [`${sender}@s.whatsapp.net`],
+          text:
+            `🗑 Anti-Delete\n\n` +
+            `From: @${sender}\n` +
+            `Message: ${body}`,
+          mentions: [
+            `${sender}@s.whatsapp.net`
+          ]
         });
       } catch {}
     }
-  });
+  }
+);
 
-  // ── Group participant updates (welcome/goodbye) ─────────────────────────────
-  sock.ev.on('group-participants.update', async ({ id: groupJid, participants, action }) => {
-    const welcome = getWelcome(groupJid);
+sock.ev.on(
+  'group-participants.update',
+  async ({
+    id,
+    participants,
+    action
+  }) => {
+    const welcome = getWelcome(id);
+
     if (!welcome?.enabled) return;
 
     for (const participant of participants) {
-      const phone = participant.replace('@s.whatsapp.net','');
-      if (action === 'add') {
-        const msg = welcome.message || `👋 Welcome @${phone} to the group!\n\n_${CONFIG.footer}_`;
-        await sock.sendMessage(groupJid, { text: msg, mentions: [participant] });
-      }
-      if (action === 'remove') {
-        await sock.sendMessage(groupJid, { text: `👋 Goodbye @${phone}! Thanks for being part of us.\n\n_${CONFIG.footer}_`, mentions: [participant] });
-      }
+      const phone = participant.replace(
+        '@s.whatsapp.net',
+        ''
+      );
+
+      try {
+        if (action === 'add') {
+          await sock.sendMessage(id, {
+            text:
+              welcome.message ||
+              `👋 Welcome @${phone}`,
+            mentions: [participant]
+          });
+        }
+
+        if (action === 'remove') {
+          await sock.sendMessage(id, {
+            text:
+              `👋 Goodbye @${phone}`,
+            mentions: [participant]
+          });
+        }
+      } catch {}
     }
-  });
+  }
+);
 
-  return sock;
+return sock;
+
+} catch (err) {
+console.error(
+'Fatal Bot Error:',
+err
+);
+
+setTimeout(startBot, 10000);
+
+}
 }
 
-function extractText(msg) {
-  const m = msg?.message;
-  return m?.conversation
-    || m?.extendedTextMessage?.text
-    || m?.imageMessage?.caption
-    || m?.videoMessage?.caption
-    || '';
-}
-
-startBot().catch(err => { console.error('Fatal:', err); process.exit(1); });
+startBot();
