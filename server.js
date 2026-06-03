@@ -6,7 +6,6 @@ import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 import makeWASocket, {
-  useMultiFileAuthState,
   fetchLatestBaileysVersion,
   DisconnectReason
 } from '@whiskeysockets/baileys';
@@ -25,10 +24,10 @@ const logger = pino({ level: 'silent' });
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ─── Active sessions ─────────────────────────────────────────────────────────
+// ─── ACTIVE SESSIONS ─────────────────────────────────────────────────────────
 const pairingSessions = new Map();
 
-// ─── Health check ─────────────────────────────────────────────────────────────
+// ─── HEALTH CHECK ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => {
   res.json({
     status: 'alive',
@@ -37,13 +36,13 @@ app.get('/health', (req, res) => {
   });
 });
 
-// ─── Home page ───────────────────────────────────────────────────────────────
+// ─── HOME ─────────────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'pair.html'));
 });
 
 // ──────────────────────────────────────────────────────────────────────────────
-//  CLEAN PAIRING SYSTEM (FIXED)
+//  REAL BAILEYS PAIRING SYSTEM (FIXED)
 // ──────────────────────────────────────────────────────────────────────────────
 app.post('/api/pair', async (req, res) => {
   const { phone, method } = req.body;
@@ -66,7 +65,7 @@ app.post('/api/pair', async (req, res) => {
     return res.status(status).json(data);
   };
 
-  // ─── Cleanup old session ───────────────────────────────────────────────────
+  // ─── CLEAN OLD SESSION ────────────────────────────────────────────────────
   if (pairingSessions.has(cleanPhone)) {
     try {
       pairingSessions.get(cleanPhone).sock?.end();
@@ -80,29 +79,28 @@ app.post('/api/pair', async (req, res) => {
   fs.mkdirSync(sessionPath, { recursive: true });
 
   try {
-    const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
     const { version } = await fetchLatestBaileysVersion();
 
+    // ⚠️ IMPORTANT: NO AUTH STATE HERE (THIS FIXES FAKE CODES)
     const sock = makeWASocket({
       version,
-      auth: state,
       logger,
       printQRInTerminal: false,
-      browser: ['Smiley Cymor Bot', 'Chrome', '1.0.0']
+      browser: ['Smiley Cymor Bot', 'Chrome', '1.0.0'],
+      auth: undefined, // 🔥 CRITICAL FIX
+      markOnlineOnConnect: false
     });
 
     pairingSessions.set(cleanPhone, {
       sock,
       sessionId,
       sessionPath,
-      status: 'pending',
+      status: 'initializing',
       qr: null,
       code: null
     });
 
-    sock.ev.on('creds.update', saveCreds);
-
-    // ─── CONNECTION LISTENER (IMPORTANT) ────────────────────────────────────
+    // ─── CONNECTION HANDLER ────────────────────────────────────────────────
     sock.ev.on('connection.update', async (update) => {
       const { connection } = update;
 
@@ -111,30 +109,35 @@ app.post('/api/pair', async (req, res) => {
 
         if (session) {
           session.status = 'connected';
-
           saveSession(cleanPhone, sessionId);
         }
       }
 
       if (connection === 'close') {
-        const session = pairingSessions.get(cleanPhone);
+        const code = update?.lastDisconnect?.error?.output?.statusCode;
 
-        if (session) {
-          const code = session.lastDisconnect?.error?.output?.statusCode;
-
-          if (code === DisconnectReason.loggedOut) {
-            pairingSessions.delete(cleanPhone);
-          }
+        if (code === DisconnectReason.loggedOut) {
+          pairingSessions.delete(cleanPhone);
         }
       }
     });
 
     // ────────────────────────────────────────────────────────────────────────
-    // PAIRING CODE METHOD (FIXED TIMING)
+    // PAIRING CODE FLOW (FIXED PROPER TIMING)
     // ────────────────────────────────────────────────────────────────────────
     if (method === 'code') {
       setTimeout(async () => {
         try {
+          // 🔥 WAIT FOR SOCKET TO BE READY PROPERLY
+          await new Promise((resolve) => {
+            const checkReady = setInterval(() => {
+              if (sock.user !== undefined || sock.ws?.readyState === 1) {
+                clearInterval(checkReady);
+                resolve();
+              }
+            }, 500);
+          });
+
           const code = await sock.requestPairingCode(cleanPhone);
 
           const formatted =
@@ -155,17 +158,17 @@ app.post('/api/pair', async (req, res) => {
 
         } catch (err) {
           return safeReply({
-            error: 'Failed to generate pairing code',
+            error: 'Pairing failed',
             details: err.message
           }, 500);
         }
-      }, 2500);
+      }, 4000); // 🔥 IMPORTANT DELAY FOR STABILITY
 
       return;
     }
 
     // ────────────────────────────────────────────────────────────────────────
-    // QR METHOD (OPTIONAL)
+    // QR METHOD (OPTIONAL FALLBACK)
     // ────────────────────────────────────────────────────────────────────────
     sock.ev.on('connection.update', async ({ qr }) => {
       if (!qr) return;
@@ -188,10 +191,10 @@ app.post('/api/pair', async (req, res) => {
     safeReply({
       success: true,
       method: 'qr',
-      message: 'QR generation started'
+      message: 'Pairing initiated'
     });
 
-    // ─── Auto cleanup ────────────────────────────────────────────────────────
+    // ─── AUTO CLEANUP ────────────────────────────────────────────────────────
     setTimeout(() => {
       const session = pairingSessions.get(cleanPhone);
 
@@ -215,7 +218,7 @@ app.post('/api/pair', async (req, res) => {
   }
 });
 
-// ─── STATUS CHECK ────────────────────────────────────────────────────────────
+// ─── STATUS ──────────────────────────────────────────────────────────────────
 app.get('/api/status/:phone', (req, res) => {
   const phone = req.params.phone.replace(/[^0-9]/g, '');
   const session = pairingSessions.get(phone);
@@ -232,10 +235,10 @@ app.get('/api/status/:phone', (req, res) => {
   });
 });
 
-// ─── START SERVER ────────────────────────────────────────────────────────────
+// ─── START SERVER ─────────────────────────────────────────────────────────────
 app.listen(CONFIG.port, '0.0.0.0', () => {
   console.log(`🌐 Server running on port ${CONFIG.port}`);
-  console.log(`🚀 Pair system ready`);
+  console.log(`🚀 REAL pairing system active`);
 });
 
 export default app;
