@@ -79,6 +79,11 @@ export function getAllUsers()          { return Object.keys(db.data.users); }
 export function saveSession(phone, sessionId) { db.data.sessions[phone] = sessionId; save(); }
 export function getSession(phone)             { return db.data.sessions[phone] || null; }
 
+// 🔥 NEW: Returns all saved sessions as [{ phone, sessionId }]
+export function getSavedSessions() {
+  return Object.entries(db.data.sessions).map(([phone, sessionId]) => ({ phone, sessionId }));
+}
+
 // ── Auto-status ───────────────────────────────────────────────────────────────
 export function setAutoStatus(phone, val)  { db.data.autostatus[phone] = !!val; save(); }
 export function getAutoStatus(phone)       { return !!db.data.autostatus[phone]; }
